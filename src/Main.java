@@ -21,9 +21,9 @@ public class Main {
         System.out.print("Enter the number of Super Citizens: ");
         int superCitizens = scanner.nextInt();
 
-        superCitizenSemaphore = new Semaphore(Math.min(2, superCitizens));
-        regularCitizenSemaphore = new Semaphore(0);
-        teamSemaphore = new Semaphore(0);
+        superCitizenSemaphore = new Semaphore(2);//max 2, need logic to have at least 1 later in team up
+        regularCitizenSemaphore = new Semaphore(3);//max 3 cause at least 1 super
+        teamSemaphore = new Semaphore(1); //sending one team at a time?
         regularCitizensRemaining = regularCitizens;
         superCitizensRemaining = superCitizens;
         teamsSent = 0;
