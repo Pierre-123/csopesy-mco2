@@ -1,11 +1,14 @@
 package src;
 
-public class Helldiver {
+public class Helldiver implements Runnable{
     String type;
     int id;
-    public Helldiver(String type, int id){
+    Main main;
+
+    public Helldiver(String type, int id, Main main){
         this.type = type;
         this.id = id;
+        this.main = main;
     }
 
     public String getType(){
@@ -14,5 +17,10 @@ public class Helldiver {
 
     public int getId(){
         return id;
+    }
+
+    @Override
+    public void run() {
+        main.teamUp(type, id);
     }
 }
