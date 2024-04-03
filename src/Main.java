@@ -86,8 +86,10 @@ public class Main {
                 teamsSent++;
             }
 
-            if(superCitizensRemaining == 0 && regularCitizensRemaining > 0 && (superCitizensRemaining+regularCitizensRemaining) < 4) {
-                System.out.println("Remaining Citizens went back home: " + regularCitizensRemaining);
+            if(superCitizensRemaining == 0 && regularCitizensRemaining > 0 || (superCitizensRemaining+regularCitizensRemaining) < 4) {
+                System.out.println("Remaining Regular Citizens went back home: " + regularCitizensRemaining);
+                System.out.println("Remaining Super Citizen went back home: " + superCitizensRemaining);
+                System.out.println("Total Teams sent: " + teamsSent);
                 executor.shutdown();
             }
 
