@@ -52,17 +52,23 @@ public class Main {
         int n_sC=0;
         try {
             if(type.equals("Regular")){
-                regularCitizenSemaphore.acquire();
-                regularCitizensRemaining--;
-                n_rC++;
-                cur_team.acquire();
-                System.out.println("Regular joined up");
+                if(regularCitizenSemaphore.tryAcquire()){
+                    regularCitizensRemaining--;
+                    n_rC++;
+                    cur_team.acquire();
+                    System.out.println("Regular joined up");
+                } else {
+                    System.out.println("Regular failed to join");
+                }
             } else {
-                superCitizenSemaphore.acquire();
-                superCitizensRemaining--;
-                n_sC++;
-                cur_team.acquire();
-                System.out.println("Super joined up");
+                if(superCitizenSemaphore.tryAcquire()){
+                    superCitizensRemaining--;
+                    n_sC++;
+                    cur_team.acquire();
+                    System.out.println("Super joined up");
+                } else {
+                    System.out.println("Super failed to join");
+                }
             }
             System.out.println("Current team: " + teamsSent);
             System.out.println("Current Citizens: " + (4 - cur_team.availablePermits()));
@@ -77,6 +83,12 @@ public class Main {
                 }
                 cur_team.release(4);
                 System.out.println("Team " + teamsSent + " going out.");
+                teamsSent++;
+            }
+
+            if(superCitizensRemaining == 0 && regularCitizensRemaining > 0 && (superCitizensRemaining+regularCitizensRemaining) < 4) {
+                System.out.println("Remaining Citizens went back home: " + regularCitizensRemaining);
+                executor.shutdown();
             }
 
         } catch (Exception e) {
