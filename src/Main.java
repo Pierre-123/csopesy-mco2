@@ -62,7 +62,6 @@ public class Main {
                     System.out.println("n_rC: " + n_rC);
                 } else {
                     System.out.println("Regular is waiting for Super");
-                    Thread.sleep(1000); // Wait for Super citizens to join
                     if (superCitizenSemaphore.tryAcquire()) {
                         superCitizensRemaining--;
                         n_sC++;
@@ -82,7 +81,6 @@ public class Main {
                     System.out.println("n_sC: " + n_sC);
                 } else {
                     System.out.println("Super is waiting for Regular");
-                    Thread.sleep(1000); // Wait for Regular citizens to join
                     if (regularCitizenSemaphore.tryAcquire()) {
                         regularCitizensRemaining--;
                         n_rC++;
