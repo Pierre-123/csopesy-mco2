@@ -112,7 +112,7 @@ public class Main {
                 System.out.println("n_rC: " + n_rC + " n_sC: " + n_sC);
             }
             //if regular citizens is in between 0-3 (assuming no more supers) or if no more supers and reg citizens is over 4 and cur_team is like not lacking in reg citizens
-            if(regularCitizensRemaining >= 0 && regularCitizensRemaining < 4 || superCitizensRemaining == 0 && regularCitizensRemaining > 4 && cur_team.availablePermits() > 2) {
+            if(regularCitizensRemaining == 0 && regularCitizensRemaining < 4 || superCitizensRemaining == 0 && regularCitizensRemaining > 4 && cur_team.availablePermits() > 2 || superCitizensRemaining > 1 && regularCitizensRemaining < 2) {
                 System.out.println(cur_team.availablePermits());
                 System.out.println("Remaining Regular Citizens went back home: " + regularCitizensRemaining);
                 System.out.println("Remaining Super Citizen went back home: " + superCitizensRemaining);
