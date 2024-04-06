@@ -54,21 +54,58 @@ public class Main {
 
     public synchronized void teamUp(String type, int id) {
         try {
-            if (shutdownRequested) return;
+            if (shutdownRequested) return; // NEED THIS
+
+            //Exit Code
+            //Incomplete team
+            if(cur_team.availablePermits()>=0){//while theres still space on the current team.
+                if( regularCitizensRemaining==0 && superCitizensRemaining==0 || //No more citizens
+                    regularCitizensRemaining==0 && superCitizensRemaining>2 && superCitizenSemaphore.availablePermits() >= 0 && regularCitizenSemaphore.availablePermits() >= 1 || //if no more regs but lots of supers. when super is filled in >=0 1-2 Supers and still more to have but reg can't >= 1
+                    superCitizensRemaining==0 && regularCitizensRemaining>3 && regularCitizenSemaphore.availablePermits() >= 0 && superCitizenSemaphore.availablePermits() > 0  //if no more supers but lots of regs. when regular is filled in >=0 2-3 Regulars but super can't > 0
+                    ){
+                    //recovery phase, release those in incomplete teams 
+                    while(regularCitizenSemaphore.availablePermits() != 3){ //all released if 3
+                        regularCitizensRemaining++;
+                        regularCitizenSemaphore.release();
+                    }
+                    while(superCitizenSemaphore.availablePermits() != 2){ //all released if 2
+                        superCitizensRemaining++;
+                        superCitizenSemaphore.release();
+                    }
+                    //output
+                    System.out.println(" ");
+                    System.out.println("Remaining Regular Citizens went back home: " + regularCitizensRemaining);
+                    System.out.println("Remaining Super Citizen went back home: " + superCitizensRemaining);
+                    System.out.println("Total Teams sent: " + teamsSent);
+                    synchronized (Main.class) {
+                        if (!shutdownRequested) {
+                            executor.shutdown();
+                            shutdownRequested = true;
+                        }
+                    }
+                }
+            }
+
+
+
+            if (shutdownRequested) return; // ALSO NEED THIS
+
+            //Citizen Processing
             if(type.equals("Regular")){
-                //System.out.println("Regular Citizen " + (rc_ID + 1) + " is signing up");
-                if(regularCitizenSemaphore.tryAcquire()){
+                if(regularCitizenSemaphore.tryAcquire() && regularCitizensRemaining > 0){
                     regularCitizensRemaining--;
                     n_rC++;
                     rc_ID++;
-                    cur_team.acquire();
-                    //System.out.println("Regular joined up");
-                    //System.out.println("n_rC: " + n_rC);
-                    System.out.println("Regular Citizen " + rc_ID + " has joined team " + checkTeam);
+                    if(cur_team.availablePermits()==4){ //means current team is empty
+                        System.out.println("Regular Citizen " + rc_ID + " is signing up");
+                    } else {
+                        System.out.println("Regular Citizen " + rc_ID + " has joined team " + checkTeam);
+                    }
+
+                    cur_team.acquire();//only then we get a permit.
                 } else {
-                    System.out.println("Regular is waiting for Super");
-                    //System.out.println("Super Citizen " + (sc_ID + 1) + " is signing up");
-                    if (superCitizenSemaphore.tryAcquire()) {
+                    System.out.println("Regular is waiting for Super"); //to avoid starving out super, we instead call for one if available.
+                    if (superCitizenSemaphore.tryAcquire() && superCitizensRemaining > 0) {
                         superCitizensRemaining--;
                         n_sC++;
                         sc_ID++;
@@ -80,19 +117,19 @@ public class Main {
                     }
                 }
             } else {
-                //System.out.println("Super Citizen " + (sc_ID + 1) + " is signing up");
-                if(superCitizenSemaphore.tryAcquire()){
+                if(superCitizenSemaphore.tryAcquire() && regularCitizensRemaining > 0){
                     superCitizensRemaining--;
                     n_sC++;
                     sc_ID++;
+                    if(cur_team.availablePermits()==4){ //means current team is empty
+                        System.out.println("Super Citizen " + sc_ID + " is signing up");
+                    } else {
+                        System.out.println("Super Citizen " + sc_ID + " has joined team " + checkTeam);
+                    }
                     cur_team.acquire();
-                    //System.out.println("Super joined up");
-                    //System.out.println("n_sC: " + n_sC);
-                    System.out.println("Super Citizen " + sc_ID + " has joined team " + checkTeam);
-                } else {
+                } else { //To avoid starving out regulars, regular is requested.
                     System.out.println("Super is waiting for Regular");
-                    //System.out.println("Regular Citizen " + (rc_ID + 1) + " is signing up");
-                    if (regularCitizenSemaphore.tryAcquire()) {
+                    if (regularCitizenSemaphore.tryAcquire() && regularCitizensRemaining > 0) {
                         regularCitizensRemaining--;
                         n_rC++;
                         rc_ID++;
@@ -104,37 +141,25 @@ public class Main {
                     }
                 }
             }
-            System.out.println("Current team: " + teamsSent);
-            System.out.println("Current Citizens: " + (4 - cur_team.availablePermits()));
+            //System.out.println("Current team: " + teamsSent);
+            //System.out.println("Current Citizens: " + (4 - cur_team.availablePermits()));
 
-
+            //Formed Team Send
             if(cur_team.availablePermits()==0){
                 regularCitizenSemaphore.release(n_rC); // signal
                 superCitizenSemaphore.release(n_sC);
                 cur_team.release(4);
-                System.out.println("Regular Citizen Permits: " + regularCitizenSemaphore.availablePermits());
-                System.out.println("Super Citizen Permits: " + superCitizenSemaphore.availablePermits());
-                System.out.println("Current Team Reset:" + cur_team.availablePermits());
+                //System.out.println("Regular Citizen Permits: " + regularCitizenSemaphore.availablePermits());
+                //System.out.println("Super Citizen Permits: " + superCitizenSemaphore.availablePermits());
+                //System.out.println("Current Team Reset:" + cur_team.availablePermits());
                 checkTeam++;
-                teamsSent++;
                 System.out.println("Team " + teamsSent + " is ready and now launching to battle (sc: " + n_sC + " | rc: " + n_rC + ")");
+                teamsSent++;
                 n_rC=0;
                 n_sC=0;
-                System.out.println("n_rC: " + n_rC + " n_sC: " + n_sC);
+                //System.out.println("n_rC: " + n_rC + " n_sC: " + n_sC);
             }
-            //if regular citizens is in between 0-3 (assuming no more supers) or if no more supers and reg citizens is over 4 and cur_team is like not lacking in reg citizens
-            if(regularCitizensRemaining == 0 && regularCitizensRemaining < 4 || superCitizensRemaining == 0 && regularCitizensRemaining > 4 && cur_team.availablePermits() > 2 || superCitizensRemaining > 1 && regularCitizensRemaining < 2) {
-                System.out.println(cur_team.availablePermits());
-                System.out.println("Remaining Regular Citizens went back home: " + regularCitizensRemaining);
-                System.out.println("Remaining Super Citizen went back home: " + superCitizensRemaining);
-                System.out.println("Total Teams sent: " + teamsSent);
-                synchronized (Main.class) {
-                    if (!shutdownRequested) {
-                        executor.shutdown();
-                        shutdownRequested = true;
-                    }
-                }
-            }
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
