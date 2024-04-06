@@ -10,14 +10,17 @@ public class Main {
     private static Semaphore superCitizenSemaphore;
     private static Semaphore regularCitizenSemaphore;
     private static Semaphore teamSemaphore;
-    private static int teamsSent;
+    private static int teamsSent = 0;
+    private static int checkTeam = 0;
     private static Semaphore cur_team;
     private static ExecutorService executor;
     private static int regularCitizensRemaining;
     private static int superCitizensRemaining;
     private static boolean shutdownRequested = false;
-    private static int n_rC=0;
-    private static int n_sC=0;
+    private static int n_rC = 0;
+    private static int n_sC = 0;
+    private static int rc_ID = 0;
+    private static int sc_ID = 0;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
@@ -29,7 +32,6 @@ public class Main {
         superCitizenSemaphore = new Semaphore(2);//max 2, need logic to have at least 1 later in team up
         regularCitizenSemaphore = new Semaphore(3);//max 3 cause at least 1 super
         teamSemaphore = new Semaphore(1); //sending one team at a time?
-        teamsSent = 0;
         cur_team = new Semaphore(4);
         executor = Executors.newCachedThreadPool();
         
@@ -54,38 +56,48 @@ public class Main {
         try {
             if (shutdownRequested) return;
             if(type.equals("Regular")){
+                //System.out.println("Regular Citizen " + (rc_ID + 1) + " is signing up");
                 if(regularCitizenSemaphore.tryAcquire()){
                     regularCitizensRemaining--;
                     n_rC++;
+                    rc_ID++;
                     cur_team.acquire();
-                    System.out.println("Regular joined up");
-                    System.out.println("n_rC: " + n_rC);
+                    //System.out.println("Regular joined up");
+                    //System.out.println("n_rC: " + n_rC);
+                    System.out.println("Regular Citizen " + rc_ID + " has joined team " + checkTeam);
                 } else {
                     System.out.println("Regular is waiting for Super");
+                    //System.out.println("Super Citizen " + (sc_ID + 1) + " is signing up");
                     if (superCitizenSemaphore.tryAcquire()) {
                         superCitizensRemaining--;
                         n_sC++;
+                        sc_ID++;
                         cur_team.acquire();
-                        System.out.println("Super joined up after Regular's request");
+                        System.out.println("Super Citizen " + sc_ID + " has joined team " + checkTeam + " after Regular Citizen's request");
                     } else {
                         System.out.println("Super failed to join even after waiting");
                         return; // Can't form a team, return
                     }
                 }
             } else {
+                //System.out.println("Super Citizen " + (sc_ID + 1) + " is signing up");
                 if(superCitizenSemaphore.tryAcquire()){
                     superCitizensRemaining--;
                     n_sC++;
+                    sc_ID++;
                     cur_team.acquire();
-                    System.out.println("Super joined up");
-                    System.out.println("n_sC: " + n_sC);
+                    //System.out.println("Super joined up");
+                    //System.out.println("n_sC: " + n_sC);
+                    System.out.println("Super Citizen " + sc_ID + " has joined team " + checkTeam);
                 } else {
                     System.out.println("Super is waiting for Regular");
+                    //System.out.println("Regular Citizen " + (rc_ID + 1) + " is signing up");
                     if (regularCitizenSemaphore.tryAcquire()) {
                         regularCitizensRemaining--;
                         n_rC++;
+                        rc_ID++;
                         cur_team.acquire();
-                        System.out.println("Regular joined up after Super's request");
+                        System.out.println("Regular Citizen " + rc_ID + " has joined team " + checkTeam + " after Super Citizen's request");
                     } else {
                         System.out.println("Regular failed to join even after waiting");
                         return; // Can't form a team, return
@@ -97,14 +109,15 @@ public class Main {
 
 
             if(cur_team.availablePermits()==0){
-                regularCitizenSemaphore.release(n_rC);
+                regularCitizenSemaphore.release(n_rC); // signal
                 superCitizenSemaphore.release(n_sC);
                 cur_team.release(4);
                 System.out.println("Regular Citizen Permits: " + regularCitizenSemaphore.availablePermits());
                 System.out.println("Super Citizen Permits: " + superCitizenSemaphore.availablePermits());
                 System.out.println("Current Team Reset:" + cur_team.availablePermits());
-                System.out.println("Team " + teamsSent + " going out.");
+                checkTeam++;
                 teamsSent++;
+                System.out.println("Team " + teamsSent + " is ready and now launching to battle (sc: " + n_sC + " | rc: " + n_rC + ")");
                 n_rC=0;
                 n_sC=0;
                 System.out.println("n_rC: " + n_rC + " n_sC: " + n_sC);
