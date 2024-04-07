@@ -101,10 +101,9 @@ public class Main {
             if (shutdownRequested) return; // ALSO NEED THIS, closing out leftover regulars and supers
 
             //Citizen Processing
-            if(type.equals("Regular")){
+            if(type.equals("Regular") && regularCitizensRemaining > 0){
                 System.out.println("Regular Citizen " + rc_ID + " is signing up");
-                System.out.println(regularCitizensRemaining);
-                if(regularCitizenSemaphore.tryAcquire() && regularCitizensRemaining > 0){
+                if(regularCitizenSemaphore.tryAcquire()){
                     regularCitizensRemaining--;
                     n_rC++;
                     System.out.println(regularCitizensRemaining);
