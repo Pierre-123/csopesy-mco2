@@ -78,18 +78,17 @@ public class Main {
 
     public synchronized void teamUp(String type, int id) {
         try {
-            if (shutdownRequested) return; // NEED THIS
+            if (shutdownRequested) return; // NEED THIS, closing out for 3 1, empty out regulars and supers
 
-            //Exit Code
+            //Exit Code for Incomplete Team
             if(cur_team.availablePermits() > 0){
-                //Incomplete team
                 if(regularCitizensRemaining > 0){//Leftover Regulars
                     if(superCitizensRemaining == 0 && superCitizenSemaphore.availablePermits()==2){
                         if(regularCitizenSemaphore.availablePermits()>=0){
                             dismissed(); //10 0, 4 0, 3 0, 1 0
                         }
                     }
-                }  
+                }
                 if(superCitizensRemaining > 0){//Leftover Supers
                     if(regularCitizensRemaining==0 && regularCitizenSemaphore.availablePermits()>1){
                         if(superCitizenSemaphore.availablePermits()>=0){
@@ -97,13 +96,9 @@ public class Main {
                         }
                     }
                 }
-                //No Leftovers
-                if(regularCitizensRemaining == 0 && superCitizensRemaining == 0){
-                    dismissed();//doesn't work with 3 1 help
-                }
             }
 
-            if (shutdownRequested) return; // ALSO NEED THIS
+            if (shutdownRequested) return; // ALSO NEED THIS, closing out leftover regulars and supers
 
             //Citizen Processing
             if(type.equals("Regular")){
@@ -166,15 +161,19 @@ public class Main {
                 cur_team.release(4);
                 //System.out.println("Regular Citizen Permits: " + regularCitizenSemaphore.availablePermits());
                 //System.out.println("Super Citizen Permits: " + superCitizenSemaphore.availablePermits());
-                System.out.println("Current Team Reset:" + cur_team.availablePermits());
+                //System.out.println("Current Team Reset:" + cur_team.availablePermits());
+                //System.out.println("Regular Citizens Remaining: " + regularCitizensRemaining);
+                //System.out.println("Super Citizens Remaining: " + superCitizensRemaining);
                 checkTeam++;
                 System.out.println("Team " + teamsSent + " is ready and now launching to battle (sc: " + n_sC + " | rc: " + n_rC + ")");
                 teamsSent++;
                 n_rC=0;
                 n_sC=0;
+                if(superCitizensRemaining == 0 && regularCitizensRemaining == 0){
+                    dismissed();//for perfect scenarios like 3 1, if both supers and regulars manage to empty out.
+                }
                 //System.out.println("n_rC: " + n_rC + " n_sC: " + n_sC);
             }
-            
         } catch (Exception e) {
             e.printStackTrace();
         }
