@@ -52,41 +52,56 @@ public class Main {
         scanner.close();
     }
 
+
+    public synchronized void dismissed() {
+        //recovery phase, release those in incomplete teams 
+        while(regularCitizenSemaphore.availablePermits() != 3){ //all released if 3
+            regularCitizensRemaining++;
+            regularCitizenSemaphore.release();
+        }
+        while(superCitizenSemaphore.availablePermits() != 2){ //all released if 2
+            superCitizensRemaining++;
+            superCitizenSemaphore.release();
+        }
+        //output
+        System.out.println(" ");
+        System.out.println("Remaining Regular Citizens went back home: " + regularCitizensRemaining);
+        System.out.println("Remaining Super Citizen went back home: " + superCitizensRemaining);
+        System.out.println("Total Teams sent: " + teamsSent);
+        synchronized (Main.class) {
+            if (!shutdownRequested) {
+                executor.shutdown();
+                shutdownRequested = true;
+            }
+        }
+    }
+
     public synchronized void teamUp(String type, int id) {
         try {
             if (shutdownRequested) return; // NEED THIS
 
             //Exit Code
-            //Incomplete team
-            if(cur_team.availablePermits()>=0){//while theres still space on the current team.
-                if( regularCitizensRemaining==0 && superCitizensRemaining==0 || //No more citizens
-                    regularCitizensRemaining==0 && superCitizensRemaining>2 && superCitizenSemaphore.availablePermits() >= 0 && regularCitizenSemaphore.availablePermits() >= 1 || //if no more regs but lots of supers. when super is filled in >=0 1-2 Supers and still more to have but reg can't >= 1
-                    superCitizensRemaining==0 && regularCitizensRemaining>3 && regularCitizenSemaphore.availablePermits() >= 0 && superCitizenSemaphore.availablePermits() > 0  //if no more supers but lots of regs. when regular is filled in >=0 2-3 Regulars but super can't > 0
-                    ){
-                    //recovery phase, release those in incomplete teams 
-                    while(regularCitizenSemaphore.availablePermits() != 3){ //all released if 3
-                        regularCitizensRemaining++;
-                        regularCitizenSemaphore.release();
+            if(cur_team.availablePermits() > 0){
+                //Incomplete team
+                if(regularCitizensRemaining > 0){//Leftover Regulars
+                    if(superCitizensRemaining == 0 && superCitizenSemaphore.availablePermits()==2){
+                        if(regularCitizenSemaphore.availablePermits()>=0){
+                            dismissed(); //10 0, 4 0, 3 0, 1 0
+                        }
                     }
-                    while(superCitizenSemaphore.availablePermits() != 2){ //all released if 2
-                        superCitizensRemaining++;
-                        superCitizenSemaphore.release();
-                    }
-                    //output
-                    System.out.println(" ");
-                    System.out.println("Remaining Regular Citizens went back home: " + regularCitizensRemaining);
-                    System.out.println("Remaining Super Citizen went back home: " + superCitizensRemaining);
-                    System.out.println("Total Teams sent: " + teamsSent);
-                    synchronized (Main.class) {
-                        if (!shutdownRequested) {
-                            executor.shutdown();
-                            shutdownRequested = true;
+                }  
+                if(superCitizensRemaining > 0){//Leftover Supers
+                    if(regularCitizensRemaining==0 && regularCitizenSemaphore.availablePermits()>1){
+                        if(superCitizenSemaphore.availablePermits()>=0){
+                            dismissed(); //0 10, 0 4, 0 3, 0 1, 1 3
                         }
                     }
                 }
+                //No Leftovers
+                if(regularCitizensRemaining == 0 && superCitizensRemaining == 0){
+                    dismissed();//doesn't work with 3 1 help
+                }
             }
-
-
 
             if (shutdownRequested) return; // ALSO NEED THIS
 
@@ -117,7 +132,7 @@ public class Main {
                     }
                 }
             } else {
-                if(superCitizenSemaphore.tryAcquire() && regularCitizensRemaining > 0){
+                if(superCitizenSemaphore.tryAcquire() && superCitizensRemaining > 0){
                     superCitizensRemaining--;
                     n_sC++;
                     sc_ID++;
@@ -151,7 +166,7 @@ public class Main {
                 cur_team.release(4);
                 //System.out.println("Regular Citizen Permits: " + regularCitizenSemaphore.availablePermits());
                 //System.out.println("Super Citizen Permits: " + superCitizenSemaphore.availablePermits());
-                //System.out.println("Current Team Reset:" + cur_team.availablePermits());
+                System.out.println("Current Team Reset:" + cur_team.availablePermits());
                 checkTeam++;
                 System.out.println("Team " + teamsSent + " is ready and now launching to battle (sc: " + n_sC + " | rc: " + n_rC + ")");
                 teamsSent++;
