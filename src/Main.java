@@ -1,9 +1,7 @@
 package src;
 
 import java.util.Scanner;
-import java.util.*;
 import java.util.concurrent.*;
-import java.io.*;
 
 public class Main {
     private static final int TEAM_SIZE = 4;
@@ -95,6 +93,9 @@ public class Main {
                             dismissed(); //0 10, 0 4, 0 3, 0 1, 1 3
                         }
                     }
+                }
+                if(regularCitizensRemaining <= 2 && regularCitizenSemaphore.availablePermits() > 1 && superCitizensRemaining <= 1 && superCitizenSemaphore.availablePermits() == 2) { //Both with leftovers
+                    dismissed();
                 }
             }
 
