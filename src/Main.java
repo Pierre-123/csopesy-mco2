@@ -85,17 +85,15 @@ public class Main {
                         if(regularCitizenSemaphore.availablePermits()>=0){
                             dismissed(); //10 0, 4 0, 3 0, 1 0
                         }
+                    } else if(regularCitizensRemaining <= 2 && regularCitizenSemaphore.availablePermits() == 3 && superCitizensRemaining <= 1 && superCitizenSemaphore.availablePermits() == 2) { //Both with leftovers
+                        dismissed();
                     }
-                }
-                if(superCitizensRemaining > 0){//Leftover Supers
+                } else if(superCitizensRemaining > 0){//Leftover Supers
                     if(regularCitizensRemaining==0 && regularCitizenSemaphore.availablePermits()>1){
                         if(superCitizenSemaphore.availablePermits()>=0){
                             dismissed(); //0 10, 0 4, 0 3, 0 1, 1 3
                         }
                     }
-                }
-                if(regularCitizensRemaining <= 2 && regularCitizenSemaphore.availablePermits() > 1 && superCitizensRemaining <= 1 && superCitizenSemaphore.availablePermits() == 2) { //Both with leftovers
-                    dismissed();
                 }
             }
 
