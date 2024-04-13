@@ -4,10 +4,8 @@ import java.util.Scanner;
 import java.util.concurrent.*;
 
 public class Main {
-    private static final int TEAM_SIZE = 4;
     private static Semaphore superCitizenSemaphore;
     private static Semaphore regularCitizenSemaphore;
-    private static Semaphore teamSemaphore;
     private static int teamsSent = 0;
     private static int checkTeam = 1;
     private static Semaphore cur_team;
@@ -29,7 +27,6 @@ public class Main {
 
         superCitizenSemaphore = new Semaphore(2);//max 2, need logic to have at least 1 later in team up
         regularCitizenSemaphore = new Semaphore(3);//max 3 cause at least 1 super
-        teamSemaphore = new Semaphore(1); //sending one team at a time?
         cur_team = new Semaphore(4);
         executor = Executors.newCachedThreadPool();
         
@@ -105,7 +102,7 @@ public class Main {
                 if(regularCitizenSemaphore.tryAcquire()){
                     regularCitizensRemaining--;
                     n_rC++;
-                    System.out.println(regularCitizensRemaining);
+
                     System.out.println("Regular Citizen " + rc_ID + " has joined team " + checkTeam);
                     rc_ID++;
 
@@ -138,7 +135,7 @@ public class Main {
                     if (regularCitizenSemaphore.tryAcquire() && regularCitizensRemaining > 0) {
                         regularCitizensRemaining--;
                         n_rC++;
-                        System.out.println(regularCitizensRemaining);
+
                         cur_team.acquire();
                         System.out.println("Regular Citizen " + rc_ID + " has joined team " + checkTeam + " after Super Citizen's request");
                         rc_ID++;
@@ -148,19 +145,12 @@ public class Main {
                     }
                 }
             }
-            //System.out.println("Current team: " + teamsSent);
-            //System.out.println("Current Citizens: " + (4 - cur_team.availablePermits()));
 
             //Formed Team Send
             if(cur_team.availablePermits()==0){
                 regularCitizenSemaphore.release(n_rC); // signal
                 superCitizenSemaphore.release(n_sC);
                 cur_team.release(4);
-                //System.out.println("Regular Citizen Permits: " + regularCitizenSemaphore.availablePermits());
-                //System.out.println("Super Citizen Permits: " + superCitizenSemaphore.availablePermits());
-                //System.out.println("Current Team Reset:" + cur_team.availablePermits());
-                //System.out.println("Regular Citizens Remaining: " + regularCitizensRemaining);
-                //System.out.println("Super Citizens Remaining: " + superCitizensRemaining);
                 checkTeam++;
 
                 teamsSent++;
@@ -173,8 +163,6 @@ public class Main {
                 if(superCitizensRemaining == 0 && regularCitizensRemaining == 0){
                     dismissed();//for perfect scenarios like 3 1, if both supers and regulars manage to empty out.
                 }
-
-                //System.out.println("n_rC: " + n_rC + " n_sC: " + n_sC);
             }
         } catch (Exception e) {
             e.printStackTrace();
