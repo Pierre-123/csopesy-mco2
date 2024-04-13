@@ -1,4 +1,6 @@
 # csopesy-mco2
+GITHUB LINK: https://github.com/Pierre-123/csopesy-mco2
+
 To run:  
 Run `javac -d classes src/*.java` to compile.  
 Run `java -classpath ./classes src.Main` to run the program.
