@@ -113,6 +113,7 @@ Line 29:
 regularCitizenSemaphore = new Semaphore(3);//max 3 cause at least 1 super
 ```
 Line 29 sets up regularCitizenSemaphore, which can only accept 2 Regular Citizens at any given time.
+
 Lines 100-111:
 ```
 //Citizen Processing
@@ -154,7 +155,7 @@ Lines 134-147:
    }
 }
 ```
-Similar to Super Citizens, Regular Citizens also have checks on Super Citizens whether or not there are already 2 Super Citizens in a team. If there are, a Regular Citizen will be processed next.
+Similar to Super Citizens, Regular Citizens also have checks on the other type of citizen, in this case, on Super Citizens whether or not there are already 2 Super Citizens in a team. If there are, a Regular Citizen will be processed next.
 
 5. Mission signups are on a first-come, first-served basis, so if a certain type of citizen builds up a queue, they must wait until they can be served (headquarters can only do so much...)
 
@@ -266,6 +267,7 @@ if(cur_team.availablePermits() > 0){
 ```
 Lines 79 to 95 of the Main.java file, as shown above, serve as the code that determines if there are any soldiers to send home. First, it checks if there are still available slots within the current team.
 If there are, it checks if there are Regular Citizens waiting in the queue. If this is true, it then checks for two possible incomplete states with this true: if only Regular Citizens are waiting now, or if there is only at most two Regular Citizens and at most one Super Citizen waiting in the queue.  If either of these are true, it calls the dismissed() function. If there are no longer any Regular Citizens, but there are still Super Citizens, the dismissed() function is also called.
+
 Lines 51-72:
 ```
 public synchronized void dismissed() {
